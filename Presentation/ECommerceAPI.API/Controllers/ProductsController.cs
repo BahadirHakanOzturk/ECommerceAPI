@@ -1,4 +1,6 @@
-﻿using ECommerceAPI.Application.Repositories;
+﻿using ECommerceAPI.Application.Abstractions.Storage;
+using ECommerceAPI.Application.Repositories;
+using ECommerceAPI.Application.RequestParameters;
 using ECommerceAPI.Application.ViewModels.Products;
 using ECommerceAPI.Domain.Entities;
 using Microsoft.AspNetCore.Http;
@@ -13,17 +15,48 @@ namespace ECommerceAPI.API.Controllers
 	{
 		readonly private IProductWriteRepository productWriteRepository;
 		readonly private IProductReadRepository productReadRepository;
+		readonly private IWebHostEnvironment webHostEnvironment;
+		readonly IFileReadRepository fileReadRepository;
+		readonly IFileWriteRepository fileWriteRepository;
+		readonly IProductImageFileReadRepository productImageFileReadRepository;
+		readonly IProductImageFileWriteRepository productImageFileWriteRepository;
+		readonly IInvoiceFileReadRepository invoiceFileReadRepository;
+		readonly IInvoiceFileWriteRepository invoiceFileWriteRepository;
+		readonly IStorageService storageService;
 
-		public ProductsController(IProductWriteRepository productWriteRepository, IProductReadRepository productReadRepository)
+		public ProductsController(IProductWriteRepository productWriteRepository, IProductReadRepository productReadRepository, IWebHostEnvironment webHostEnvironment, IFileReadRepository fileReadRepository, IFileWriteRepository fileWriteRepository, IProductImageFileReadRepository productImageFileReadRepository, IProductImageFileWriteRepository productImageFileWriteRepository, IInvoiceFileReadRepository invoiceFileReadRepository, IInvoiceFileWriteRepository invoiceFileWriteRepository, IStorageService storageService)
 		{
 			this.productWriteRepository = productWriteRepository;
 			this.productReadRepository = productReadRepository;
+			this.webHostEnvironment = webHostEnvironment;
+			this.fileReadRepository = fileReadRepository;
+			this.fileWriteRepository = fileWriteRepository;
+			this.productImageFileReadRepository = productImageFileReadRepository;
+			this.productImageFileWriteRepository = productImageFileWriteRepository;
+			this.invoiceFileReadRepository = invoiceFileReadRepository;
+			this.invoiceFileWriteRepository = invoiceFileWriteRepository;
+			this.storageService = storageService;
 		}
 
 		[HttpGet]
-		public async Task<IActionResult> Get()
+		public async Task<IActionResult> Get([FromQuery] Pagination pagination)
 		{
-			return Ok(productReadRepository.GetAll(false));
+			var totalCount = productReadRepository.GetAll(false).Count();
+			var products = productReadRepository.GetAll(false).Select(p => new
+			{
+				p.Id,
+				p.Name,
+				p.Stock,
+				p.Price,
+				p.CreatedDate,
+				p.UpdatedDate
+			}).Skip(pagination.Page * pagination.Size).Take(pagination.Size);
+
+			return Ok(new
+			{
+				totalCount,
+				products
+			});
 		}
 
 		[HttpGet("{id}")]
@@ -35,7 +68,7 @@ namespace ECommerceAPI.API.Controllers
 		[HttpPost]
 		public async Task<IActionResult> Post(ProductCreateVM model)
 		{
-			if(ModelState.IsValid)
+			if (ModelState.IsValid)
 			{
 
 			}
@@ -43,7 +76,8 @@ namespace ECommerceAPI.API.Controllers
 			{
 				Name = model.Name,
 				Price = model.Price,
-				Stock = model.Stock }
+				Stock = model.Stock
+			}
 			);
 			await productWriteRepository.SaveAsync();
 			return Ok((int)HttpStatusCode.Created);
@@ -65,6 +99,41 @@ namespace ECommerceAPI.API.Controllers
 		{
 			await productWriteRepository.RemoveAsync(id);
 			await productWriteRepository.SaveAsync();
+			return Ok();
+		}
+
+		[HttpPost("[action]")]
+		public async Task<IActionResult> Upload()
+		{
+			var datas = await storageService.UploadAsync("resource\\files", Request.Form.Files);
+			//var datas = await fileService.UploadAsync("resource/files", Request.Form.Files);
+			await productImageFileWriteRepository.AddRangeAsync(datas.Select(d => new ProductImageFile()
+			{
+				FileName = d.fileName,
+				Path = d.pathOrContainerName,
+				Storage = storageService.StorageName
+			}).ToList());
+			//await productImageFileWriteRepository.SaveAsync();
+
+			//await invoiceFileWriteRepository.AddRangeAsync(datas.Select(d => new InvoiceFile()
+			//{
+			//	FileName = d.fileName,
+			//	Path = d.path,
+			//	Price = new Random().Next()
+			//}).ToList());
+			//await invoiceFileWriteRepository.SaveAsync();
+
+			//await fileWriteRepository.AddRangeAsync(datas.Select(d => new Domain.Entities.File()
+			//{
+			//	FileName = d.fileName,
+			//	Path = d.path,
+			//}).ToList());
+			//await fileWriteRepository.SaveAsync();
+
+			//var d1 = fileReadRepository.GetAll();
+			//var d2 = invoiceFileReadRepository.GetAll();
+			//var d3 = productImageFileReadRepository.GetAll();
+
 			return Ok();
 		}
 	}

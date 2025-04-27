@@ -1,12 +1,18 @@
 using ECommerceAPI.Application.Validators.Products;
 using ECommerceAPI.Persistence;
+using ECommerceAPI.Infrastructure;
 using FluentValidation.AspNetCore;
+using ECommerceAPI.Infrastructure.Services.Storage.Local;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddPersistenceServices();
+builder.Services.AddInfrastructureServices();
+
+builder.Services.AddStorage<LocalStorage>();
+
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 	policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()
 	//policy.WithOrigins("http://localhost:4200/", "https://localhost:4200/").AllowAnyHeader().AllowAnyMethod()
@@ -26,6 +32,8 @@ if (app.Environment.IsDevelopment())
 	app.UseSwagger();
 	app.UseSwaggerUI();
 }
+
+app.UseStaticFiles();
 
 app.UseCors();
 
