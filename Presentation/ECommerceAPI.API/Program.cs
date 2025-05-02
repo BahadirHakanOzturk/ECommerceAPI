@@ -3,6 +3,7 @@ using ECommerceAPI.Persistence;
 using ECommerceAPI.Infrastructure;
 using FluentValidation.AspNetCore;
 using ECommerceAPI.Infrastructure.Services.Storage.Local;
+using ECommerceAPI.Infrastructure.Services.Storage.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddPersistenceServices();
 builder.Services.AddInfrastructureServices();
 
-builder.Services.AddStorage<LocalStorage>();
+builder.Services.AddStorage<AzureStorage>();
 
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 	policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()

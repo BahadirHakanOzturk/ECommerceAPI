@@ -5,7 +5,7 @@ using System.IO;
 
 namespace ECommerceAPI.Infrastructure.Services.Storage.Local;
 
-public class LocalStorage : ILocalStorage
+public class LocalStorage : Storage, ILocalStorage
 {
 	private readonly IWebHostEnvironment webHostEnvironment;
 
@@ -53,9 +53,10 @@ public class LocalStorage : ILocalStorage
 		
 		foreach (IFormFile file in files)
 		{
+			string fileNewName = await FileRenameAsync(path, file.Name, HasFile);
 
-			bool result = await CopyFileAsync($"{uploadPath}\\{file.Name}", file);
-			datas.Add((file.Name, $"{path}\\{file.Name}"));
+			bool result = await CopyFileAsync($"{uploadPath}\\{fileNewName}", file);
+			datas.Add((fileNewName, $"{path}\\{fileNewName}"));
 		}
 		
 		return datas;
