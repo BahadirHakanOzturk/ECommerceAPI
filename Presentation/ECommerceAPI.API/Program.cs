@@ -4,6 +4,7 @@ using ECommerceAPI.Infrastructure;
 using FluentValidation.AspNetCore;
 using ECommerceAPI.Infrastructure.Services.Storage.Local;
 using ECommerceAPI.Infrastructure.Services.Storage.Azure;
+using ECommerceAPI.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddPersistenceServices();
 builder.Services.AddInfrastructureServices();
+builder.Services.AddApplicationServices();
 
 builder.Services.AddStorage<AzureStorage>();
 
