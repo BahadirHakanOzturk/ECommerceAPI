@@ -5,7 +5,7 @@ using MediatR;
 namespace ECommerceAPI.Application.Features.Commands.AppUser.CreateUser;
 
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommandRequest, CreateUserCommandResponse>
-{>
+{
 	readonly IUserService userService;
 
 	public CreateUserCommandHandler(IUserService userService)

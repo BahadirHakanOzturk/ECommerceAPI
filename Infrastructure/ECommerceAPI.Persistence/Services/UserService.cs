@@ -1,5 +1,6 @@
 ﻿using ECommerceAPI.Application.Abstractions.Services;
 using ECommerceAPI.Application.DTOs.User;
+using ECommerceAPI.Application.Exceptions;
 using ECommerceAPI.Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
 
@@ -33,5 +34,17 @@ public class UserService : IUserService
 				response.Message += $"{error.Code} - {error.Description}\n";
 
 		return response;
+	}
+
+	public async Task UpdateRefreshTokenAsync(string refreshToken, AppUser user, DateTime accessTokenExpireDate, int addOnAccessTokenDate)
+	{
+		if (user != null)
+		{
+			user.RefreshToken = refreshToken;
+			user.RefreshTokenExpireDate = accessTokenExpireDate.AddSeconds(addOnAccessTokenDate);
+			await userManager.UpdateAsync(user);
+		}
+		else
+			throw new NotFoundUserException();
 	}
 }
